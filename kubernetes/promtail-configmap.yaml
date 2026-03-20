@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promtail-config
+  namespace: mlops-hw1
+data:
+  promtail.yaml: |
+    server:
+      http_listen_port: 9080
+      grpc_listen_port: 0
+
+    positions:
+      filename: /run/promtail/positions.yaml
+
+    clients:
+      - url: http://loki:3100/loki/api/v1/push
+
+    scrape_configs:
+      - job_name: ml-api-only
+        pipeline_stages:
+          - docker: {}
+
+        static_configs:
+          - targets:
+              - localhost
+            labels:
+              job: ml-api-only
+              __path__: /var/log/pods/mlops-hw1_ml-api-*/*/*.log

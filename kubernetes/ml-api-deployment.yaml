@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-api
+  namespace: mlops-hw1
+  labels:
+    app: ml-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ml-api
+  template:
+    metadata:
+      labels:
+        app: ml-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8000"
+    spec:
+      containers:
+        - name: ml-api
+          image: ml-api:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+            - containerPort: 50051
+          envFrom:
+            - configMapRef:
+                name: mlops-config
+            - secretRef:
+                name: mlops-secret
+          volumeMounts:
+            - name: models-storage
+              mountPath: /app/saved_models
+            - name: logs-storage
+              mountPath: /app/logs
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "768Mi"
+              cpu: "750m"
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: models-storage
+          persistentVolumeClaim:
+            claimName: models-pvc
+        - name: logs-storage
+          persistentVolumeClaim:
+            claimName: logs-pvc

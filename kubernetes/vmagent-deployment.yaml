@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vmagent
+  namespace: mlops-hw1
+  labels:
+    app: vmagent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vmagent
+  template:
+    metadata:
+      labels:
+        app: vmagent
+    spec:
+      containers:
+        - name: vmagent
+          image: victoriametrics/vmagent:v1.112.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-promscrape.config=/etc/vmagent/scrape.yml"
+            - "-remoteWrite.url=http://victoriametrics:8428/api/v1/write"
+          ports:
+            - containerPort: 8429
+              name: http
+          volumeMounts:
+            - name: config
+              mountPath: /etc/vmagent
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+      volumes:
+        - name: config
+          configMap:
+            name: vmagent-config

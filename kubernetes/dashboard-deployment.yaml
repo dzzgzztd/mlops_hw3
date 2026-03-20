@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-dashboard
+  namespace: mlops-hw1
+  labels:
+    app: ml-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ml-dashboard
+  template:
+    metadata:
+      labels:
+        app: ml-dashboard
+    spec:
+      containers:
+        - name: ml-dashboard
+          image: ml-dashboard:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 7860
+          env:
+            - name: API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: mlops-config
+                  key: API_BASE_URL
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
